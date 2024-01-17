@@ -48,7 +48,7 @@ def elo_sort(team):
 
 games = []
 
-for year in range(2000, 2022):
+for year in range(2000, 2023):
     response = games_api.get_games(year=year)
     games = [*games, *response]
 
@@ -63,3 +63,52 @@ games = [dict(
     ) for g in games if g.home_points is not None and g.away_points is not None]
 
 games.sort(key=date_sort)
+
+#dict to hold current Elo rating for each team
+teams = dict()
+
+# loop thru games
+for game in games:
+
+    #get current rating for home team
+    if game['home_team'] in teams:
+        home_elo = teams[game['home_team']]
+    elif game['home_conference'] is not None:
+        # if no rating, set to 1500
+        home_elo = 1500
+    else: 
+        # 1200 for non FBS teams
+        home_elo = 1200
+
+    #current rating for away team
+    if game['away_team'] in teams:
+        away_elo = teams[game['away_team']]
+    elif game['away_conference'] is not None:
+        # if no rating, set to 1500
+        away_elo = 1500
+    else: 
+        # 1200 for non FBS teams
+        away_elo = 1200
+
+    # calculate score margin from game
+    margin = game['home_points'] - game['away_points']
+
+    # get new elos
+    new_elos = get_new_elos(home_elo, away_elo, margin)
+
+    # set pregame elos on game dict
+    game['pregame_home_elo'] = home_elo
+    game['pregame_away_elo'] = away_elo
+
+    # set postgame elos 
+    game['postgame_home_elo'] = new_elos[0]
+    game['postgame_away_elo'] = new_elos[1]
+
+    # set current elo values
+    teams[game['home_team']] = new_elos[0]
+    teams[game['away_team']] = new_elos[1]
+
+end_elos = [dict(team=key, elo=teams[key]) for key in teams]
+end_elos.sort(key=elo_sort, reverse=True)
+
+print(end_elos)
