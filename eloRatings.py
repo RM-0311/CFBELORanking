@@ -44,4 +44,22 @@ def date_sort(game):
     return game_date
 
 def elo_sort(team):
-    return team[]
+    return team['elo']
+
+games = []
+
+for year in range(2000, 2022):
+    response = games_api.get_games(year=year)
+    games = [*games, *response]
+
+games = [dict(
+    start_date=g.start_date,
+    home_team=g.home_team,
+    home_conference=g.home_conference,
+    home_points=g.home_points,
+    away_team=g.away_team,
+    away_conference=g.away_conference,
+    away_points=g.away_points
+    ) for g in games if g.home_points is not None and g.away_points is not None]
+
+games.sort(key=date_sort)
