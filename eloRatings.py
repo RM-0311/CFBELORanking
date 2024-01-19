@@ -2,6 +2,7 @@ import cfbd
 import datetime
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
 
 configuration = cfbd.Configuration()
 configuration.api_key['Authorization'] = 'VqztL88l78/b6EKPDlVIANwQxm+dHUguGb2nlln3qWLdpJNT+4OAhJIsS1r1Lolj'
@@ -111,4 +112,28 @@ for game in games:
 end_elos = [dict(team=key, elo=teams[key]) for key in teams]
 end_elos.sort(key=elo_sort, reverse=True)
 
-print(end_elos)
+plt.style.use('fivethirtyeight')
+
+# Graph sizing
+plt.rcParams["figure.figsize"] = [20,10]
+
+def generate_chart(team):
+    team_games = []
+    for game in games:
+        if game['home_team'] == team:
+            team_games.append(dict(start_date=game['start_date'], elo=game['postgame_home_elo']))
+
+        if game['away_team'] == team:
+            team_games.append(dict(start_date=game['start_date'], elo=game['postgame_away_elo']))
+
+    df = pd.DataFrame.from_records(team_games)
+
+    fig, ax = plt.subplots()
+    ax.plot(df.index, df['elo'])
+
+    ax.set(xlabel='Game No.', ylabel='Elo Rating', 
+           title="Historical Elo Rating - {0}".format(team))
+    
+    plt.show()
+
+print(generate_chart('Kansas State'))
